@@ -7,14 +7,36 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media print {
-            body * { visibility: hidden; }
-            #slipPrintArea, #slipPrintArea * { visibility: visible; }
-            #slipPrintArea { position: absolute; left: 0; top: 0; width: 100%; }
+        @page {
+            size: A5 portrait;
+            margin: 10mm;
         }
-        .italian-stripe {
-            height: 4px;
-            background: linear-gradient(90deg, #00A859 33.3%, #ffffff 33.3%, #ffffff 66.6%, #E30613 66.6%);
+        body * {
+            visibility: hidden;
         }
+        #slipPrintArea, #slipPrintArea * {
+            visibility: visible;
+        }
+        #slipPrintArea {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            max-width: 100% !important;
+            padding: 12px !important;
+            box-shadow: none !important;
+            border: none !important;
+            font-size: 11px !important; /* Menyesuaikan proporsi agar pas 1 halaman A5 */
+        }
+        /* Memastikan tabel slip gaji compact */
+        #slipPrintArea table {
+            font-size: 11px !important;
+        }
+    }
+    .italian-stripe {
+        height: 4px; 
+        background: linear-gradient(90deg, #00A859 33.3%, #ffffff 33.3%, #ffffff 66.6%, #E30613 66.6%); 
+    }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans pb-12">
