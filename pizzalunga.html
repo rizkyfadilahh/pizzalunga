@@ -87,6 +87,31 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #D1D5DB;
         }
+        /* Apple Segmented Navigation Sliding Pill */
+        #tab-slider {
+            position: absolute;
+            border-radius: 0.75rem;
+            background: #FFFFFF;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            pointer-events: none;
+            transition: left 0.32s cubic-bezier(0.2, 0.9, 0.28, 1), width 0.32s cubic-bezier(0.2, 0.9, 0.28, 1), top 0.2s ease, height 0.2s ease, opacity 0.15s ease;
+            z-index: 1;
+        }
+        /* Smooth View Entrance Animation */
+        .view-animated {
+            animation: appleViewFade 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes appleViewFade {
+            0% {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen pb-16 flex flex-col">
@@ -133,24 +158,27 @@
     <!-- Main Container -->
     <main class="max-w-6xl mx-auto px-4 pt-6 flex-1 w-full">
 
-        <!-- Apple-style Segmented Navigation Control -->
-        <nav class="bg-gray-200/70 p-1.5 rounded-2xl mb-6 flex gap-1 overflow-x-auto shadow-inner border border-gray-300/40">
-            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-1 min-w-[120px] py-2 px-3 text-center text-xs font-semibold rounded-xl transition bg-white text-gray-900 shadow-sm">
+        <!-- Apple-style Segmented Navigation Control with Sliding Highlight Pill -->
+        <nav id="mainNav" class="relative bg-gray-200/70 p-1.5 rounded-2xl mb-6 flex gap-1 overflow-x-auto shadow-inner border border-gray-300/40 select-none">
+            <!-- Sliding Active Pill Indicator -->
+            <div id="tab-slider" class="opacity-0"></div>
+
+            <button type="button" onclick="switchTab('dashboard')" id="tab-dashboard" class="relative z-10 flex-1 min-w-[120px] py-2 px-3 text-center text-xs font-bold rounded-xl transition-colors duration-200 text-gray-900">
                 📊 Dashboard
             </button>
-            <button onclick="switchTab('pos')" id="tab-pos" class="flex-1 min-w-[130px] py-2 px-3 text-center text-xs font-medium rounded-xl transition text-gray-600 hover:text-gray-900 hover:bg-white/50">
+            <button type="button" onclick="switchTab('pos')" id="tab-pos" class="relative z-10 flex-1 min-w-[130px] py-2 px-3 text-center text-xs font-medium rounded-xl transition-colors duration-200 text-gray-500 hover:text-gray-900">
                 🍕 POS Kasir
             </button>
-            <button onclick="switchTab('non-pos')" id="tab-non-pos" class="flex-1 min-w-[130px] py-2 px-3 text-center text-xs font-medium rounded-xl transition text-gray-600 hover:text-gray-900 hover:bg-white/50">
+            <button type="button" onclick="switchTab('non-pos')" id="tab-non-pos" class="relative z-10 flex-1 min-w-[130px] py-2 px-3 text-center text-xs font-medium rounded-xl transition-colors duration-200 text-gray-500 hover:text-gray-900">
                 💸 Pengeluaran
             </button>
-            <button onclick="switchTab('payroll')" id="tab-payroll" class="flex-1 min-w-[110px] py-2 px-3 text-center text-xs font-medium rounded-xl transition text-gray-600 hover:text-gray-900 hover:bg-white/50">
+            <button type="button" onclick="switchTab('payroll')" id="tab-payroll" class="relative z-10 flex-1 min-w-[110px] py-2 px-3 text-center text-xs font-medium rounded-xl transition-colors duration-200 text-gray-500 hover:text-gray-900">
                 📄 Slip Gaji
             </button>
-            <button onclick="switchTab('event')" id="tab-event" class="flex-1 min-w-[130px] py-2 px-3 text-center text-xs font-medium rounded-xl transition text-gray-600 hover:text-gray-900 hover:bg-white/50">
+            <button type="button" onclick="switchTab('event')" id="tab-event" class="relative z-10 flex-1 min-w-[130px] py-2 px-3 text-center text-xs font-medium rounded-xl transition-colors duration-200 text-gray-500 hover:text-gray-900">
                 🎪 Kelola Event
             </button>
-            <button onclick="switchTab('history')" id="tab-history" class="flex-1 min-w-[140px] py-2 px-3 text-center text-xs font-medium rounded-xl transition text-gray-600 hover:text-gray-900 hover:bg-white/50">
+            <button type="button" onclick="switchTab('history')" id="tab-history" class="relative z-10 flex-1 min-w-[140px] py-2 px-3 text-center text-xs font-medium rounded-xl transition-colors duration-200 text-gray-500 hover:text-gray-900">
                 📜 Riwayat & Analisa
             </button>
         </nav>
@@ -1000,6 +1028,7 @@
         }
 
         window.onload = function() {
+            initTabSlider();
             resetDatesToToday();
             loadCloudData();
         };
@@ -1133,22 +1162,74 @@
             applyHistoryFilters();
         }
 
+        let currentActiveTab = 'dashboard';
+
+        function moveTabSlider(tab, animate = true) {
+            const slider = document.getElementById('tab-slider');
+            const targetBtn = document.getElementById(`tab-${tab}`);
+            if (!slider || !targetBtn) return;
+
+            if (!animate) {
+                const origTransition = slider.style.transition;
+                slider.style.transition = 'none';
+                slider.style.left = `${targetBtn.offsetLeft}px`;
+                slider.style.top = `${targetBtn.offsetTop}px`;
+                slider.style.width = `${targetBtn.offsetWidth}px`;
+                slider.style.height = `${targetBtn.offsetHeight}px`;
+                slider.style.opacity = '1';
+                void slider.offsetHeight; // Force reflow
+                slider.style.transition = origTransition;
+                return;
+            }
+
+            slider.style.left = `${targetBtn.offsetLeft}px`;
+            slider.style.top = `${targetBtn.offsetTop}px`;
+            slider.style.width = `${targetBtn.offsetWidth}px`;
+            slider.style.height = `${targetBtn.offsetHeight}px`;
+            slider.style.opacity = '1';
+        }
+
+        function initTabSlider() {
+            moveTabSlider(currentActiveTab, false);
+            setTimeout(() => {
+                moveTabSlider(currentActiveTab, false);
+            }, 80);
+        }
+
+        window.addEventListener('resize', () => {
+            moveTabSlider(currentActiveTab, false);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTabSlider();
+        });
+
         function switchTab(tab) {
+            currentActiveTab = tab;
             const tabs = ['dashboard', 'pos', 'non-pos', 'payroll', 'event', 'history'];
             tabs.forEach(t => {
                 const viewEl = document.getElementById(`view-${t}`);
                 const tabEl = document.getElementById(`tab-${t}`);
-                if (viewEl) viewEl.classList.add('hidden');
+                if (viewEl) {
+                    viewEl.classList.add('hidden');
+                    viewEl.classList.remove('view-animated');
+                }
                 if (tabEl) {
-                    tabEl.className = "flex-1 min-w-[110px] py-2 px-3 text-center text-xs font-medium rounded-xl transition text-gray-600 hover:text-gray-900 hover:bg-white/50";
+                    tabEl.className = "relative z-10 flex-1 min-w-[110px] py-2 px-3 text-center text-xs font-medium rounded-xl transition-colors duration-200 text-gray-500 hover:text-gray-900";
                 }
             });
 
             const activeView = document.getElementById(`view-${tab}`);
             const activeTabBtn = document.getElementById(`tab-${tab}`);
-            if (activeView) activeView.classList.remove('hidden');
+            if (activeView) {
+                activeView.classList.remove('hidden');
+                void activeView.offsetWidth; // Reflow to restart view entrance animation smoothly
+                activeView.classList.add('view-animated');
+            }
             if (activeTabBtn) {
-                activeTabBtn.className = "flex-1 min-w-[110px] py-2 px-3 text-center text-xs font-semibold rounded-xl transition bg-white text-gray-900 shadow-sm";
+                activeTabBtn.className = "relative z-10 flex-1 min-w-[110px] py-2 px-3 text-center text-xs font-bold rounded-xl transition-colors duration-200 text-gray-900";
+                moveTabSlider(tab, true);
+                activeTabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
 
             if (tab === 'dashboard') calculateDashboard();
